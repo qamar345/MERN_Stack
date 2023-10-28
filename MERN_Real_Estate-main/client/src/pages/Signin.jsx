@@ -1,15 +1,14 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom';
-// import { useDispatch } from '@reduxjs/toolkit';
+import { useDispatch, useSelector } from 'react-redux';
 import { signInStart, signInFailure, signInSuccess } from '../redux/user/userSlice';
-import { useSelector } from 'react-redux';
 
 export default function Signin() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({});
-  const [error, setError] = useState({});
-  const [loading, setLoading] = useState(false);
+  const { loading, error } = useSelector((state) => state.user);
 
 
   const handleChange = (e) => {
@@ -23,7 +22,7 @@ export default function Signin() {
     e.preventDefault();
 
     try {
-      setLoading(true);
+      dispatch(signInStart());
       const res = await fetch('api/auth/signin',
         {
           method: 'POST',
@@ -35,13 +34,13 @@ export default function Signin() {
       );
       const data = await res.json();
       if (data.success === false) {
-        setError(data.message);
+        dispatch(signInFailure(data.message));
         return;
       }
-      setLoading(false);
+      dispatch(signInSuccess(data));
       navigate("/")
     } catch (error) {
-      setError(error.message);
+      dispatch(signInFailure(error.message))
     }
   }
 
@@ -52,7 +51,7 @@ export default function Signin() {
       <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
         <input type="email" placeholder='email' className='border p-3 rounded-lg' id='email' onChange={handleChange} />
         <input type="password" placeholder='password' className='border p-3 rounded-lg' id='password' onChange={handleChange} />
-        <button disabled={loading} className='bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80'>{loading ? 'Loading...' : 'Sign Up'}
+        <button disabled={loading} className='bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80'>{loading ? 'Loading...' : 'Sign In'}
         </button>
       </form>
       <div className='flex gap-2 mt-5'>
@@ -61,7 +60,7 @@ export default function Signin() {
           <span className='text-blue-700'>Sign up</span>
         </Link>
       </div>
-      {Error && <p className='text-red-700 mt-5'>{Error}</p>}
+      {error && <p className='text-red-700 mt-5'>{error}</p>}
     </div>
   )
 }
