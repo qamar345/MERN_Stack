@@ -71,11 +71,8 @@ const Listing = () => {
                         <input className='p-3 border border-gray-600 rounded w-full' type="file" id='images' accept='image/*' multiple />
                         <button className='p-3 text-green-700 uppercase border border-green-700 rounded hover:shadow-lg disabled:opacity-80'>Upload</button>
                     </div>
-
                     <button className='p-3 bg-slate-700 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-80'>Create Listing</button>
-
                 </div>
-
             </form>
         </main>
     )
