@@ -1,9 +1,19 @@
 import { React, useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux';
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from 'firebase/storage';
-import { updateUserStart, updateUserSuccess, updateUerFailure } from '../redux/user/userSlice';
 import { app } from '../firebase';
 import { useDispatch } from 'react-redux';
+
+import {
+  updateUserStart,
+  updateUserSuccess,
+  updateUerFailure,
+  deleteUserStart,
+  deleteUserSuccess,
+  deleteUserFailure
+} from '../redux/user/userSlice';
+
+
 
 
 /* 
@@ -26,11 +36,6 @@ export default function Profile() {
   const [fileUploadError, setFileUploadError] = useState(false);
   const [formData, setFormData] = useState({});
   const [updateSuccess, setUpdateSuccess] = useState(false);
-
-  // console.log(fileProg);
-  // console.log(fileUploadError);
-  console.log(formData);
-
 
   useEffect(() => {
     if (file) {
@@ -94,6 +99,26 @@ export default function Profile() {
     }
   }
 
+  const handleDeleteUser = async (e) => {
+    e.preventDefault();
+
+    try {
+      dispatch(deleteUserStart());
+      const res = await fetch(`/api/user/delete/${currentUser._id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success === false) {
+        dispatch(updateUerFailure(data));
+        return;
+      }
+      dispatch(deleteUserSuccess(data.message));
+
+    } catch (error) {
+      dispatch(deleteUserFailure(error.message));
+    }
+  }
+
   return (
     <div className='max-w-lg p-3 mx-auto'>
       <h1 className='text-3xl font-semibold text-center my-7'>Profile</h1>
@@ -117,20 +142,19 @@ export default function Profile() {
         <input type="text" defaultValue={currentUser.username} onChange={handleChange} id='username' placeholder='username' className='border p-3 rounded-lg' />
         <input type="email" defaultValue={currentUser.email} onChange={handleChange} id='email' placeholder='email' className='border p-3 rounded-lg' />
         <input type="text" defaultValue={currentUser.password} onChange={handleChange} id='password' placeholder='password' className='border p-3 rounded-lg' />
+        <p className='text-red-700 mt-5 text-center'>
+          {error ? error : ''}
+        </p>
+        <p className='text-green-700 text-center'>
+          {updateSuccess ? "User Updated Successfully" : ''}
+        </p>
         <button className='bg-slate-700 text-white rounded-lg p-3 hover:opacity-95 disabled:opacity-80 uppercase'>{
           loading ? 'Loading...' : 'Update'
         }</button>
       </form>
 
-      <p className='text-red-700 mt-5 text-center'>
-          {error ? error : ''}
-        </p>
-        <p className='text-green-700 mt-5 text-center'>
-          {updateSuccess ? "User Updated Successfully" : ''}
-        </p>
-
       <div className='flex justify-between mt-5'>
-        <span className='text-red-700 cursor-pointer'>Delete account</span>
+        <span className='text-red-700 cursor-pointer' onClick={handleDeleteUser}>Delete account</span>
         <span className='text-red-700 cursor-pointer'>Sign out</span>
       </div>
 
