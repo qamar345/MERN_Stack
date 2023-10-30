@@ -1,6 +1,47 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { app } from '../firebase.js';
+import { getStorage, uploadBytesResumable, ref } from 'firebase/storage';
 
 const Listing = () => {
+
+    const [files, setFiles] = useState([]);
+
+    const handleImageSubmit = (e) => {
+        if (files.length > 0 && files.length < 7) {
+            const promises = []
+
+            for (let i = 0; i < files.length; i++) {
+                promises.push(storeImage(files[i]));
+            }
+        }
+    }
+
+    const storeImage = () => {
+        return new Promise((resolve, reject) => {
+            const storage = getStorage(app);
+            const fileName = new Date().getTime() + files.name;
+            const storageRef = ref(storage, fileName);
+            const uploadTask = uploadBytesResumable(storageRef, files);
+
+            uploadTask.on(
+                'state_changed', (snapshot) => {
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    setFileProg(Math.round(progress));
+                },
+
+                (error) => {
+                    reject(error)
+                },
+
+                () => {
+                    getDownloadURL(uploadTask.snapshot.ref).then(
+                        (downloadURL) => setFormData({ ...formData, avatar: downloadURL })
+                    );
+                }
+            );
+        })
+    }
+
     return (
         <main className='p-3 max-w-4xl mx-auto'>
             <h1 className='text-3xl text-center my-7 font-semibold'>Create Listing</h1>
@@ -68,8 +109,8 @@ const Listing = () => {
                         <span className='font-normal text-gray-600 ml-2'>The first image will be cover (max 6)</span>
                     </p>
                     <div className="flex gap-4">
-                        <input className='p-3 border border-gray-600 rounded w-full' type="file" id='images' accept='image/*' multiple />
-                        <button className='p-3 text-green-700 uppercase border border-green-700 rounded hover:shadow-lg disabled:opacity-80'>Upload</button>
+                        <input onChange={(e) => setFiles(e.target.files)} className='p-3 border border-gray-600 rounded w-full' type="file" id='images' accept='image/*' multiple />
+                        <button type='button' onClick={handleImageSubmit} className='p-3 text-green-700 uppercase border border-green-700 rounded hover:shadow-lg disabled:opacity-80'>Upload</button>
                     </div>
                     <button className='p-3 bg-slate-700 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-80'>Create Listing</button>
                 </div>
